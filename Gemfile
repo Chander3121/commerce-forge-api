@@ -23,7 +23,7 @@ gem "devise"
 gem "devise-jwt"
 
 # Authorization
-gem "pundit"
+gem "pundit", "~> 2.5"
 
 # Background Jobs
 gem "redis"
@@ -53,7 +53,7 @@ group :development, :test do
   gem "rspec-rails"
   gem "factory_bot_rails"
   gem "faker"
-  gem "shoulda-matchers"
+  gem "shoulda-matchers", "~> 8.0"
 
   # Development
   gem "annotate"
