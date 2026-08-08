@@ -4,6 +4,8 @@ class DeviseCreateUsers < ActiveRecord::Migration[8.1]
       t.string :email, null: false
       t.string :encrypted_password, null: false
 
+      t.string :jti, null: false
+
       t.string :reset_password_token
       t.datetime :reset_password_sent_at
 
@@ -14,5 +16,6 @@ class DeviseCreateUsers < ActiveRecord::Migration[8.1]
 
     add_index :users, :email, unique: true
     add_index :users, :reset_password_token, unique: true
+    add_index :users, :jti, unique: true
   end
 end

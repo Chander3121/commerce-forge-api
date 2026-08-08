@@ -9,16 +9,15 @@
 # Use this hook to configure devise mailer, warden hooks and so forth.
 # Many of these configuration options can be set straight in your model.
 Devise.setup do |config|
-
   config.mailer_sender = "noreply@commerceforge.dev"
 
-  require 'devise/orm/active_record'
+  require "devise/orm/active_record"
 
-  config.case_insensitive_keys = [:email]
+  config.case_insensitive_keys = [ :email ]
 
-  config.strip_whitespace_keys = [:email]
+  config.strip_whitespace_keys = [ :email ]
 
-  config.skip_session_storage = [:http_auth]
+  config.skip_session_storage = [ :http_auth, :params_auth ]
 
   config.stretches = Rails.env.test? ? 1 : 12
 
@@ -39,4 +38,21 @@ Devise.setup do |config|
 
   config.navigational_formats = []
 
+  config.warden do |manager|
+    manager.failure_app = Core::Authentication::FailureApp
+  end
+
+  config.jwt do |jwt|
+    jwt.secret = Rails.application.credentials.secret_key_base
+
+    jwt.dispatch_requests = [
+      [ "POST", %r{^/api/v1/auth/login$} ]
+    ]
+
+    jwt.revocation_requests = [
+      [ "DELETE", %r{^/api/v1/auth/logout$} ]
+    ]
+
+    jwt.expiration_time = 24.hours.to_i
+  end
 end
