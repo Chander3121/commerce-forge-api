@@ -1,6 +1,9 @@
 # frozen_string_literal: true
 
 class Product < ApplicationRecord
+  has_many :order_items, dependent: :restrict_with_error
+  has_many :orders, through: :order_items
+
   STATUSES = %w[active inactive archived].freeze
 
   validates :name, presence: true

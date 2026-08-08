@@ -44,6 +44,11 @@ permissions = [
   },
 
   {
+    name: "Create Orders",
+    code: "orders.create",
+    description: "Allows creating orders"
+  },
+  {
     name: "View Orders",
     code: "orders.read",
     description: "View orders."
