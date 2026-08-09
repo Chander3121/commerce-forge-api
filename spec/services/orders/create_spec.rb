@@ -5,19 +5,29 @@ require "rails_helper"
 RSpec.describe Orders::Create do
   describe "#call" do
     let(:user) { create(:user) }
+    let(:customer) { create(:customer) }
     let(:product) { create(:product, price: 500) }
 
     it "creates an order" do
-      expect do
-        described_class.new(
-          user: user,
-          items: [ { product: product, quantity: 2 } ]
-        ).call
-      end.to change(Order, :count).by(1)
+      order = described_class.new(
+        user: user,
+        customer: customer,
+        items: [
+          {
+            product: product,
+            quantity: 2
+          }
+        ]
+      ).call
+
+      expect(order).to be_persisted
+      expect(order.user).to eq(user)
+      expect(order.customer).to eq(customer)
     end
 
     it "creates order items" do
       order = described_class.new(
+        customer: customer,
         user: user,
         items: [ { product: product, quantity: 2 } ]
       ).call
@@ -34,6 +44,7 @@ RSpec.describe Orders::Create do
 
     it "snapshots the product price" do
       order = described_class.new(
+        customer: customer,
         user: user,
         items: [ { product: product, quantity: 2 } ]
       ).call
@@ -49,6 +60,7 @@ RSpec.describe Orders::Create do
       product_2 = create(:product, price: 300)
 
       order = described_class.new(
+        customer: customer,
         user: user,
         items: [
           { product: product_1, quantity: 2 },
@@ -62,6 +74,7 @@ RSpec.describe Orders::Create do
 
     it "creates the order with pending status" do
       order = described_class.new(
+        customer: customer,
         user: user,
         items: [ { product: product, quantity: 1 } ]
       ).call
@@ -78,6 +91,7 @@ RSpec.describe Orders::Create do
 
       expect do
         described_class.new(
+          customer: customer,
           user: user,
           items: [ { product: invalid_product, quantity: 1 } ]
         ).call
@@ -90,6 +104,7 @@ RSpec.describe Orders::Create do
     it "rejects zero quantity" do
       expect do
         described_class.new(
+          customer: customer,
           user: user,
           items: [ { product: product, quantity: 0 } ]
         ).call
@@ -105,6 +120,7 @@ RSpec.describe Orders::Create do
     it "rejects negative quantity" do
       expect do
         described_class.new(
+          customer: customer,
           user: user,
           items: [ { product: product, quantity: -1 } ]
         ).call

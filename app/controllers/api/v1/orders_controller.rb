@@ -9,18 +9,21 @@ module Api
       def index
         authorize Order
 
-        orders = Order.includes(:order_items).order(created_at: :desc)
+        orders = Order.includes(:order_items, :customer).order(created_at: :desc)
 
         render_success(
           message: "Orders fetched successfully.",
           data: {
             orders: orders.as_json(
               include: {
+                customer: {
+                  only: %i[id name email phone]
+                },
                 order_items: {
                   only: %i[id product_id quantity unit_price total_price]
                 }
               },
-              only: %i[id user_id status subtotal total currency created_at]
+              only: %i[id user_id customer_id status subtotal total currency created_at]
             )
           }
         )
@@ -29,8 +32,11 @@ module Api
       def create
         authorize Order
 
+        customer = Customer.find(params[:order][:customer_id])
+
         order = Orders::Create.new(
           user: current_user,
+          customer: customer,
           items: order_items_params
         ).call
 
@@ -40,24 +46,10 @@ module Api
             order: order.as_json(
               include: {
                 order_items: {
-                  only: %i[
-                    id
-                    product_id
-                    quantity
-                    unit_price
-                    total_price
-                  ]
+                  only: %i[id product_id quantity unit_price total_price]
                 }
               },
-              only: %i[
-                id
-                user_id
-                status
-                subtotal
-                total
-                currency
-                created_at
-              ]
+              only: %i[id user_id status subtotal total currency created_at]
             )
           },
           status: :created
@@ -83,25 +75,14 @@ module Api
           data: {
             order: @order.as_json(
               include: {
+                customer: {
+                  only: %i[id name email phone]
+                },
                 order_items: {
-                  only: %i[
-                    id
-                    product_id
-                    quantity
-                    unit_price
-                    total_price
-                  ]
+                  only: %i[id product_id quantity unit_price total_price]
                 }
               },
-              only: %i[
-                id
-                user_id
-                status
-                subtotal
-                total
-                currency
-                created_at
-              ]
+              only: %i[id user_id customer_id status subtotal total currency created_at]
             )
           }
         )
@@ -168,6 +149,10 @@ module Api
             quantity: item.require(:quantity).to_i
           }
         end
+      end
+
+      def order_customer_id
+        params.require(:order).fetch(:customer_id)
       end
 
       def order_update_params

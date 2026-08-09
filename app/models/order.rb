@@ -2,6 +2,7 @@
 
 class Order < ApplicationRecord
   belongs_to :user
+  belongs_to :customer, optional: true
 
   has_many :order_items, dependent: :restrict_with_error
   has_many :products, through: :order_items

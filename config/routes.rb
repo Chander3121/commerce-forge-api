@@ -19,6 +19,11 @@ Rails.application.routes.draw do
           post :cancel
         end
       end
+      resources :customers, only: %i[index show update] do
+        member do
+          get :orders
+        end
+      end
       namespace :auth do
         get "me", to: "me#show"
       end

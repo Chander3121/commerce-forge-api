@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_08_115257) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_09_081449) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -22,6 +22,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_08_115257) do
     t.string "slug", null: false
     t.datetime "updated_at", null: false
     t.index ["slug"], name: "index_categories_on_slug", unique: true
+  end
+
+  create_table "customers", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "email"
+    t.string "name"
+    t.string "phone"
+    t.datetime "updated_at", null: false
+    t.index ["email"], name: "index_customers_on_email", unique: true
+    t.index ["phone"], name: "index_customers_on_phone"
   end
 
   create_table "order_items", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -40,11 +50,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_08_115257) do
   create_table "orders", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "currency", default: "INR", null: false
+    t.uuid "customer_id"
     t.string "status", default: "pending", null: false
     t.decimal "subtotal", precision: 12, scale: 2, null: false
     t.decimal "total", precision: 12, scale: 2, null: false
     t.datetime "updated_at", null: false
     t.uuid "user_id", null: false
+    t.index ["customer_id"], name: "index_orders_on_customer_id"
     t.index ["status"], name: "index_orders_on_status"
     t.index ["user_id"], name: "index_orders_on_user_id"
   end
@@ -116,6 +128,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_08_115257) do
 
   add_foreign_key "order_items", "orders"
   add_foreign_key "order_items", "products"
+  add_foreign_key "orders", "customers"
   add_foreign_key "orders", "users"
   add_foreign_key "role_permissions", "permissions"
   add_foreign_key "role_permissions", "roles"

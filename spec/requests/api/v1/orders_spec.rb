@@ -4,7 +4,8 @@ require "rails_helper"
 
 RSpec.describe "Api::V1::Orders", type: :request do
   describe "GET /api/v1/orders" do
-    let!(:order) { create(:order) }
+    let!(:customer) { create(:customer) }
+    let!(:order) { create(:order, customer: customer) }
 
     context "when user is not authenticated" do
       it "returns unauthorized" do
@@ -70,6 +71,13 @@ RSpec.describe "Api::V1::Orders", type: :request do
           expect(body["success"]).to be(true)
           expect(body["message"]).to eq("Orders fetched successfully.")
           expect(body["data"]["orders"]).to be_an(Array)
+
+          returned_order = body["data"]["orders"].first
+
+          expect(returned_order["customer"]["id"]).to eq(order.customer.id)
+          expect(returned_order["customer"]["name"]).to eq(order.customer.name)
+          expect(returned_order["customer"]["email"]).to eq(order.customer.email)
+          expect(returned_order["customer"]["phone"]).to eq(order.customer.phone)
         end
       end
     end
@@ -77,10 +85,12 @@ RSpec.describe "Api::V1::Orders", type: :request do
 
   describe "POST /api/v1/orders" do
     let(:product) { create(:product, price: 500) }
+    let(:customer) { create(:customer) }
 
     let(:order_params) do
       {
         order: {
+          customer_id: customer.id,
           items: [
             {
               product_id: product.id,
@@ -166,6 +176,7 @@ RSpec.describe "Api::V1::Orders", type: :request do
           order = Order.last
 
           expect(order.user).to eq(user)
+          expect(order.customer).to eq(customer)
           expect(order.status).to eq("pending")
           expect(order.subtotal).to eq(1000)
           expect(order.total).to eq(1000)
@@ -183,6 +194,7 @@ RSpec.describe "Api::V1::Orders", type: :request do
         it "uses the product price instead of the client supplied price" do
           malicious_params = {
             order: {
+              customer_id: customer.id,
               items: [
                 {
                   product_id: product.id,
@@ -213,6 +225,7 @@ RSpec.describe "Api::V1::Orders", type: :request do
         it "returns unprocessable entity for invalid quantity" do
           invalid_params = {
             order: {
+              customer_id: customer.id,
               items: [
                 {
                   product_id: product.id,
@@ -243,7 +256,8 @@ RSpec.describe "Api::V1::Orders", type: :request do
   end
 
   describe "GET /api/v1/orders/:id" do
-    let!(:order) { create(:order, user: user) }
+    let!(:customer) { create(:customer) }
+    let!(:order) { create(:order, user: user, customer: customer) }
 
     context "when user is not authenticated" do
       let(:user) { create(:user) }
@@ -303,6 +317,13 @@ RSpec.describe "Api::V1::Orders", type: :request do
           expect(body["success"]).to be(true)
           expect(body["message"]).to eq("Order fetched successfully.")
           expect(body["data"]["order"]["id"]).to eq(order.id)
+
+          returned_order = body["data"]["order"]
+
+          expect(returned_order["customer"]["id"]).to eq(order.customer.id)
+          expect(returned_order["customer"]["name"]).to eq(order.customer.name)
+          expect(returned_order["customer"]["email"]).to eq(order.customer.email)
+          expect(returned_order["customer"]["phone"]).to eq(order.customer.phone)
         end
 
         it "does not allow access to another user's order" do

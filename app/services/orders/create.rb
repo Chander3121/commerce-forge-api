@@ -2,8 +2,9 @@
 
 module Orders
   class Create
-    def initialize(user:, items:)
+    def initialize(user:, customer:, items:)
       @user = user
+      @customer = customer
       @items = items
     end
 
@@ -11,6 +12,7 @@ module Orders
       Order.transaction do
         order = Order.create!(
           user: @user,
+          customer: @customer,
           status: "pending",
           subtotal: 0,
           total: 0,
