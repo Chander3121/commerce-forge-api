@@ -38,6 +38,9 @@ gem "pagy"
 # Search
 gem "pg_search"
 
+# Payment Adapter
+gem "razorpay"
+
 group :development, :test do
   # Debugging
   gem "debug", platforms: %i[mri windows], require: "debug/prelude"

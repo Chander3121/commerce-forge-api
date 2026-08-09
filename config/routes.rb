@@ -22,6 +22,7 @@ Rails.application.routes.draw do
           post :deliver
           post :cancel
         end
+        resources :payments, only: :create
       end
       resources :customers, only: %i[index show update] do
         member do

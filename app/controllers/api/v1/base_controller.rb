@@ -19,7 +19,7 @@ module Api
       def render_error(
         message:,
         errors: [],
-        status: :unprocessable_entity
+        status: :unprocessable_content
       )
         render json: {
           success: false,

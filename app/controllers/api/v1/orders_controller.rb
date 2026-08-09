@@ -63,7 +63,7 @@ module Api
               message: e.message
             }
           ],
-          status: :unprocessable_entity
+          status: :unprocessable_content
         )
       end
 
@@ -108,7 +108,7 @@ module Api
               message: e.record.errors.full_messages.to_sentence
             }
           ],
-          status: :unprocessable_entity
+          status: :unprocessable_content
         )
       end
 

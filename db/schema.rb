@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_09_081449) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_09_105545) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -59,6 +59,23 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_09_081449) do
     t.index ["customer_id"], name: "index_orders_on_customer_id"
     t.index ["status"], name: "index_orders_on_status"
     t.index ["user_id"], name: "index_orders_on_user_id"
+  end
+
+  create_table "payments", force: :cascade do |t|
+    t.decimal "amount"
+    t.datetime "created_at", null: false
+    t.string "currency"
+    t.string "failure_code"
+    t.text "failure_message"
+    t.string "gateway"
+    t.string "gateway_transaction_id"
+    t.string "idempotency_key", null: false
+    t.uuid "order_id", null: false
+    t.datetime "paid_at"
+    t.string "status"
+    t.datetime "updated_at", null: false
+    t.index ["idempotency_key"], name: "index_payments_on_idempotency_key", unique: true
+    t.index ["order_id"], name: "index_payments_on_order_id"
   end
 
   create_table "permissions", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -130,6 +147,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_09_081449) do
   add_foreign_key "order_items", "products"
   add_foreign_key "orders", "customers"
   add_foreign_key "orders", "users"
+  add_foreign_key "payments", "orders"
   add_foreign_key "role_permissions", "permissions"
   add_foreign_key "role_permissions", "roles"
   add_foreign_key "user_roles", "roles"

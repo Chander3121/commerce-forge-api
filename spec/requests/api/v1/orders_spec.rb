@@ -240,7 +240,7 @@ RSpec.describe "Api::V1::Orders", type: :request do
                headers: authenticated_headers(user),
                as: :json
 
-          expect(response).to have_http_status(:unprocessable_entity)
+          expect(response).to have_http_status(:unprocessable_content)
 
           body = JSON.parse(response.body)
 
@@ -728,7 +728,7 @@ RSpec.describe "Api::V1::Orders", type: :request do
           post "/api/v1/orders/#{order.id}/cancel",
                headers: authenticated_headers(user)
 
-          expect(response).to have_http_status(:unprocessable_entity)
+          expect(response).to have_http_status(:unprocessable_content)
 
           body = JSON.parse(response.body)
 
