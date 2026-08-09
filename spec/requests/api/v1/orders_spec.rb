@@ -339,6 +339,405 @@ RSpec.describe "Api::V1::Orders", type: :request do
     end
   end
 
+  describe "POST /api/v1/orders/:id/confirm" do
+    let!(:order) { create(:order, status: "pending") }
+
+    context "when user is not authenticated" do
+      it "returns unauthorized" do
+        post "/api/v1/orders/#{order.id}/confirm"
+
+        expect(response).to have_http_status(:unauthorized)
+      end
+    end
+
+    context "when user is authenticated" do
+      context "when user does not have orders.update permission" do
+        let(:user) { create(:user) }
+
+        it "returns forbidden" do
+          post "/api/v1/orders/#{order.id}/confirm",
+               headers: authenticated_headers(user)
+
+          expect(response).to have_http_status(:forbidden)
+
+          body = JSON.parse(response.body)
+
+          expect(body["success"]).to be(false)
+          expect(body["errors"]).to include(
+            "code" => "AUTHORIZATION_FAILED",
+            "message" => "You are not authorized to perform this action."
+          )
+        end
+      end
+
+      context "when user has orders.update permission" do
+        let(:user) { create(:user) }
+
+        before do
+          role = create(:role)
+
+          permission = create(
+            :permission,
+            name: "Update Orders",
+            code: "orders.update"
+          )
+
+          create(
+            :role_permission,
+            role: role,
+            permission: permission
+          )
+
+          create(
+            :user_role,
+            user: user,
+            role: role
+          )
+        end
+
+        it "confirms the order" do
+          post "/api/v1/orders/#{order.id}/confirm",
+               headers: authenticated_headers(user)
+
+          expect(response).to have_http_status(:ok)
+
+          body = JSON.parse(response.body)
+
+          expect(body["success"]).to be(true)
+          expect(body["message"]).to eq(
+            "Order confirmed successfully."
+          )
+
+          expect(order.reload.status).to eq("confirmed")
+        end
+      end
+    end
+  end
+
+  describe "POST /api/v1/orders/:id/process" do
+    let!(:order) { create(:order, status: "confirmed") }
+
+    context "when user is not authenticated" do
+      it "returns unauthorized" do
+        post "/api/v1/orders/#{order.id}/process"
+
+        expect(response).to have_http_status(:unauthorized)
+      end
+    end
+
+    context "when user is authenticated" do
+      context "when user does not have orders.update permission" do
+        let(:user) { create(:user) }
+
+        it "returns forbidden" do
+          post "/api/v1/orders/#{order.id}/process",
+               headers: authenticated_headers(user)
+
+          expect(response).to have_http_status(:forbidden)
+
+          body = JSON.parse(response.body)
+
+          expect(body["success"]).to be(false)
+          expect(body["errors"]).to include(
+            "code" => "AUTHORIZATION_FAILED",
+            "message" => "You are not authorized to perform this action."
+          )
+        end
+      end
+
+      context "when user has orders.update permission" do
+        let(:user) { create(:user) }
+
+        before do
+          role = create(:role)
+
+          permission = create(
+            :permission,
+            name: "Update Orders",
+            code: "orders.update"
+          )
+
+          create(
+            :role_permission,
+            role: role,
+            permission: permission
+          )
+
+          create(
+            :user_role,
+            user: user,
+            role: role
+          )
+        end
+
+        it "moves the order to processing" do
+          post "/api/v1/orders/#{order.id}/process",
+               headers: authenticated_headers(user)
+
+          expect(response).to have_http_status(:ok)
+
+          body = JSON.parse(response.body)
+
+          expect(body["success"]).to be(true)
+          expect(body["message"]).to eq(
+            "Order moved to processing successfully."
+          )
+
+          expect(order.reload.status).to eq("processing")
+        end
+      end
+    end
+  end
+
+  describe "POST /api/v1/orders/:id/ship" do
+    let!(:order) do
+      order = create(:order, status: "pending")
+      order.confirm!
+      order.process!
+      order
+    end
+
+    context "when user is not authenticated" do
+      it "returns unauthorized" do
+        post "/api/v1/orders/#{order.id}/ship"
+
+        expect(response).to have_http_status(:unauthorized)
+      end
+    end
+
+    context "when user is authenticated" do
+      context "when user does not have orders.update permission" do
+        let(:user) { create(:user) }
+
+        it "returns forbidden" do
+          post "/api/v1/orders/#{order.id}/ship",
+               headers: authenticated_headers(user)
+
+          expect(response).to have_http_status(:forbidden)
+
+          body = JSON.parse(response.body)
+
+          expect(body["success"]).to be(false)
+          expect(body["errors"]).to include(
+            "code" => "AUTHORIZATION_FAILED",
+            "message" => "You are not authorized to perform this action."
+          )
+        end
+      end
+
+      context "when user has orders.update permission" do
+        let(:user) { create(:user) }
+
+        before do
+          role = create(:role)
+
+          permission = create(
+            :permission,
+            name: "Update Orders",
+            code: "orders.update"
+          )
+
+          create(
+            :role_permission,
+            role: role,
+            permission: permission
+          )
+
+          create(
+            :user_role,
+            user: user,
+            role: role
+          )
+        end
+
+        it "ships the order" do
+          post "/api/v1/orders/#{order.id}/ship",
+               headers: authenticated_headers(user)
+
+          expect(response).to have_http_status(:ok)
+
+          body = JSON.parse(response.body)
+
+          expect(body["success"]).to be(true)
+          expect(body["message"]).to eq(
+            "Order shipped successfully."
+          )
+
+          expect(order.reload.status).to eq("shipped")
+        end
+      end
+    end
+  end
+
+  describe "POST /api/v1/orders/:id/deliver" do
+    let!(:order) do
+      order = create(:order, status: "pending")
+      order.confirm!
+      order.process!
+      order.ship!
+      order
+    end
+
+    context "when user is not authenticated" do
+      it "returns unauthorized" do
+        post "/api/v1/orders/#{order.id}/deliver"
+
+        expect(response).to have_http_status(:unauthorized)
+      end
+    end
+
+    context "when user is authenticated" do
+      context "when user does not have orders.update permission" do
+        let(:user) { create(:user) }
+
+        it "returns forbidden" do
+          post "/api/v1/orders/#{order.id}/deliver",
+               headers: authenticated_headers(user)
+
+          expect(response).to have_http_status(:forbidden)
+
+          body = JSON.parse(response.body)
+
+          expect(body["success"]).to be(false)
+          expect(body["errors"]).to include(
+            "code" => "AUTHORIZATION_FAILED",
+            "message" => "You are not authorized to perform this action."
+          )
+        end
+      end
+
+      context "when user has orders.update permission" do
+        let(:user) { create(:user) }
+
+        before do
+          role = create(:role)
+
+          permission = create(
+            :permission,
+            name: "Update Orders",
+            code: "orders.update"
+          )
+
+          create(
+            :role_permission,
+            role: role,
+            permission: permission
+          )
+
+          create(
+            :user_role,
+            user: user,
+            role: role
+          )
+        end
+
+        it "delivers the order" do
+          post "/api/v1/orders/#{order.id}/deliver",
+               headers: authenticated_headers(user)
+
+          expect(response).to have_http_status(:ok)
+
+          body = JSON.parse(response.body)
+
+          expect(body["success"]).to be(true)
+          expect(body["message"]).to eq(
+            "Order delivered successfully."
+          )
+
+          expect(order.reload.status).to eq("delivered")
+        end
+      end
+    end
+  end
+
+  describe "POST /api/v1/orders/:id/cancel" do
+    let!(:order) { create(:order, status: "pending") }
+
+    context "when user is not authenticated" do
+      it "returns unauthorized" do
+        post "/api/v1/orders/#{order.id}/cancel"
+
+        expect(response).to have_http_status(:unauthorized)
+      end
+    end
+
+    context "when user is authenticated" do
+      context "when user does not have orders.update permission" do
+        let(:user) { create(:user) }
+
+        it "returns forbidden" do
+          post "/api/v1/orders/#{order.id}/cancel",
+               headers: authenticated_headers(user)
+
+          expect(response).to have_http_status(:forbidden)
+
+          body = JSON.parse(response.body)
+
+          expect(body["success"]).to be(false)
+          expect(body["errors"]).to include(
+            "code" => "AUTHORIZATION_FAILED",
+            "message" => "You are not authorized to perform this action."
+          )
+        end
+      end
+
+      context "when user has orders.update permission" do
+        let(:user) { create(:user) }
+
+        before do
+          role = create(:role)
+
+          permission = create(
+            :permission,
+            name: "Update Orders",
+            code: "orders.update"
+          )
+
+          create(
+            :role_permission,
+            role: role,
+            permission: permission
+          )
+
+          create(
+            :user_role,
+            user: user,
+            role: role
+          )
+        end
+
+        it "cancels the order" do
+          post "/api/v1/orders/#{order.id}/cancel",
+               headers: authenticated_headers(user)
+
+          expect(response).to have_http_status(:ok)
+
+          body = JSON.parse(response.body)
+
+          expect(body["success"]).to be(true)
+          expect(body["message"]).to eq(
+            "Order cancelled successfully."
+          )
+
+          expect(order.reload.status).to eq("cancelled")
+        end
+
+        it "returns unprocessable entity when the order cannot be cancelled" do
+          order.confirm!
+
+          post "/api/v1/orders/#{order.id}/cancel",
+               headers: authenticated_headers(user)
+
+          expect(response).to have_http_status(:unprocessable_entity)
+
+          body = JSON.parse(response.body)
+
+          expect(body["success"]).to be(false)
+        end
+      end
+    end
+  end
+
   describe "PATCH /api/v1/orders/:id" do
     let!(:order) { create(:order, user: user) }
 
@@ -415,82 +814,6 @@ RSpec.describe "Api::V1::Orders", type: :request do
 
           expect(body["success"]).to be(true)
           expect(body["message"]).to eq("Order updated successfully.")
-        end
-      end
-    end
-  end
-
-  describe "POST /api/v1/orders/:id/cancel" do
-    let!(:order) { create(:order, user: user) }
-
-    context "when user is not authenticated" do
-      let(:user) { create(:user) }
-
-      it "returns unauthorized" do
-        post "/api/v1/orders/#{order.id}/cancel"
-
-        expect(response).to have_http_status(:unauthorized)
-      end
-    end
-
-    context "when user is authenticated" do
-      context "when user does not have orders.cancel permission" do
-        let(:user) { create(:user) }
-
-        it "returns forbidden" do
-          post "/api/v1/orders/#{order.id}/cancel",
-               headers: authenticated_headers(user)
-
-          expect(response).to have_http_status(:forbidden)
-        end
-      end
-
-      context "when user has orders.cancel permission" do
-        let(:user) { create(:user) }
-
-        before do
-          role = create(:role)
-
-          permission = create(
-            :permission,
-            name: "Cancel Orders",
-            code: "orders.cancel"
-          )
-
-          create(
-            :role_permission,
-            role: role,
-            permission: permission
-          )
-
-          create(
-            :user_role,
-            user: user,
-            role: role
-          )
-        end
-
-        it "cancels a pending order" do
-          post "/api/v1/orders/#{order.id}/cancel",
-               headers: authenticated_headers(user)
-
-          expect(response).to have_http_status(:ok)
-          expect(order.reload.status).to eq("cancelled")
-
-          body = JSON.parse(response.body)
-
-          expect(body["success"]).to be(true)
-          expect(body["message"]).to eq("Order cancelled successfully.")
-        end
-
-        it "returns unprocessable entity when order cannot be cancelled" do
-          order.confirm!
-
-          post "/api/v1/orders/#{order.id}/cancel",
-               headers: authenticated_headers(user)
-
-          expect(response).to have_http_status(:unprocessable_entity)
-          expect(order.reload.status).to eq("confirmed")
         end
       end
     end

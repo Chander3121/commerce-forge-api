@@ -19,8 +19,24 @@ class OrderPolicy < ApplicationPolicy
     user.has_permission?("orders.update")
   end
 
+  def confirm?
+    user.has_permission?("orders.update")
+  end
+
+  def process_order?
+    user.has_permission?("orders.update")
+  end
+
+  def ship?
+    user.has_permission?("orders.update")
+  end
+
+  def deliver?
+    user.has_permission?("orders.update")
+  end
+
   def cancel?
-    user.has_permission?("orders.cancel")
+    user.has_permission?("orders.update")
   end
 
   private

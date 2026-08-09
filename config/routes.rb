@@ -14,8 +14,12 @@ Rails.application.routes.draw do
     namespace :v1 do
       resources :products, only: %i[index show create update destroy]
       resources :categories
-      resources :orders, only: %i[index show create update] do
+      resources :orders, only: %i[index create show update] do
         member do
+          post :confirm
+          post :process_order, path: :process
+          post :ship
+          post :deliver
           post :cancel
         end
       end

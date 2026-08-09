@@ -51,6 +51,7 @@ RSpec.describe Order, type: :model do
       it "rejects confirmation of a non-pending order" do
         order = create(:order)
         order.confirm!
+        order.process!
         order.ship!
 
         expect { order.confirm! }.to raise_error(
@@ -60,13 +61,46 @@ RSpec.describe Order, type: :model do
       end
     end
 
+    describe "#process!" do
+      it "moves a confirmed order to processing" do
+        order = create(:order, status: "confirmed")
+
+        expect do
+          order.process!
+        end.to change(order, :status)
+          .from("confirmed")
+          .to("processing")
+      end
+
+      it "rejects processing a pending order" do
+        order = create(:order, status: "pending")
+
+        expect { order.process! }
+          .to raise_error(
+            ArgumentError,
+            "Invalid order status transition"
+          )
+      end
+    end
+
     describe "#ship!" do
       it "ships a confirmed order" do
         order = create(:order, status: "confirmed")
+        order.process!
 
         expect { order.ship! }
           .to change(order, :status)
-          .from("confirmed")
+          .from("processing")
+          .to("shipped")
+      end
+
+      it "ships a processing order" do
+        order = create(:order, status: "confirmed")
+        order.process!
+
+        expect { order.ship! }
+          .to change(order, :status)
+          .from("processing")
           .to("shipped")
       end
 
@@ -83,6 +117,7 @@ RSpec.describe Order, type: :model do
         order = create(:order)
 
         order.confirm!
+        order.process!
         order.ship!
 
         expect { order.deliver! }.to change { order.reload.status }
@@ -124,8 +159,17 @@ RSpec.describe Order, type: :model do
         expect(order).to be_valid
       end
 
-      it "allows confirmed to shipped" do
+      it "allows confirmed to processing" do
         order.confirm!
+
+        order.status = "processing"
+
+        expect(order).to be_valid
+      end
+
+      it "allows processing to shipped" do
+        order.confirm!
+        order.process!
 
         order.status = "shipped"
 
@@ -134,6 +178,7 @@ RSpec.describe Order, type: :model do
 
       it "allows shipped to delivered" do
         order.confirm!
+        order.process!
         order.ship!
 
         order.status = "delivered"
@@ -143,6 +188,7 @@ RSpec.describe Order, type: :model do
 
       it "does not allow delivered to pending" do
         order.confirm!
+        order.process!
         order.ship!
         order.deliver!
 

@@ -10,6 +10,7 @@ class Order < ApplicationRecord
   STATUSES = %w[
     pending
     confirmed
+    processing
     shipped
     delivered
     cancelled
@@ -31,8 +32,12 @@ class Order < ApplicationRecord
     transition_to!("confirmed", from: "pending")
   end
 
+  def process!
+    transition_to!("processing", from: "confirmed")
+  end
+
   def ship!
-    transition_to!("shipped", from: "confirmed")
+    transition_to!("shipped", from: "processing")
   end
 
   def deliver!
@@ -54,7 +59,8 @@ class Order < ApplicationRecord
   def valid_status_transition
     allowed_transitions = {
       "pending" => %w[confirmed cancelled],
-      "confirmed" => %w[shipped cancelled],
+      "confirmed" => %w[processing cancelled],
+      "processing" => %w[shipped cancelled],
       "shipped" => %w[delivered],
       "delivered" => [],
       "cancelled" => []

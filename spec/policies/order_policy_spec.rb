@@ -78,14 +78,62 @@ RSpec.describe OrderPolicy do
     end
   end
 
+  describe "#confirm?" do
+    context "with orders.update permission" do
+      before { grant_permission("orders.update") }
+
+      it { expect(policy.confirm?).to be(true) }
+    end
+
+    context "without orders.update permission" do
+      it { expect(policy.confirm?).to be(false) }
+    end
+  end
+
+  describe "#process_order?" do
+    context "with orders.update permission" do
+      before { grant_permission("orders.update") }
+
+      it { expect(policy.process_order?).to be(true) }
+    end
+
+    context "without orders.update permission" do
+      it { expect(policy.process_order?).to be(false) }
+    end
+  end
+
+  describe "#ship?" do
+    context "with orders.update permission" do
+      before { grant_permission("orders.update") }
+
+      it { expect(policy.ship?).to be(true) }
+    end
+
+    context "without orders.update permission" do
+      it { expect(policy.ship?).to be(false) }
+    end
+  end
+
+  describe "#deliver?" do
+    context "with orders.update permission" do
+      before { grant_permission("orders.update") }
+
+      it { expect(policy.deliver?).to be(true) }
+    end
+
+    context "without orders.update permission" do
+      it { expect(policy.deliver?).to be(false) }
+    end
+  end
+
   describe "#cancel?" do
-    context "with orders.cancel permission" do
-      before { grant_permission("orders.cancel") }
+    context "with orders.update permission" do
+      before { grant_permission("orders.update") }
 
       it { expect(policy.cancel?).to be(true) }
     end
 
-    context "without orders.cancel permission" do
+    context "without orders.update permission" do
       it { expect(policy.cancel?).to be(false) }
     end
   end

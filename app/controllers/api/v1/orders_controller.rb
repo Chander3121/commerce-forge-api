@@ -4,7 +4,7 @@ module Api
   module V1
     class OrdersController < BaseController
       before_action :authenticate_user!
-      before_action :set_order, only: %i[show update cancel]
+      before_action :set_order, only: %i[show update confirm process_order ship deliver cancel]
 
       def index
         authorize Order
@@ -112,6 +112,66 @@ module Api
         )
       end
 
+      def confirm
+        authorize @order
+
+        @order.confirm!
+
+        render_success(
+          message: "Order confirmed successfully.",
+          data: {
+            order: @order.as_json(
+              only: %i[id user_id customer_id status subtotal total currency created_at]
+            )
+          }
+        )
+      end
+
+      def process_order
+        authorize @order
+
+        @order.process!
+
+        render_success(
+          message: "Order moved to processing successfully.",
+          data: {
+            order: @order.as_json(
+              only: %i[id user_id customer_id status subtotal total currency created_at]
+            )
+          }
+        )
+      end
+
+      def ship
+        authorize @order
+
+        @order.ship!
+
+        render_success(
+          message: "Order shipped successfully.",
+          data: {
+            order: @order.as_json(
+              only: %i[id user_id customer_id status subtotal total currency created_at]
+            )
+          }
+        )
+      end
+
+      def deliver
+        authorize @order
+
+        @order.deliver!
+
+        render_success(
+          message: "Order delivered successfully.",
+          data: {
+            order: @order.as_json(
+              only: %i[id user_id customer_id status subtotal total currency created_at]
+            )
+          }
+        )
+      end
+
       def cancel
         authorize @order
 
@@ -120,19 +180,15 @@ module Api
         render_success(
           message: "Order cancelled successfully.",
           data: {
-            order: @order
+            order: @order.as_json(
+              only: %i[id user_id customer_id status subtotal total currency created_at]
+            )
           }
         )
       rescue ArgumentError => e
         render_error(
           message: e.message,
-          errors: [
-            {
-              code: "INVALID_ORDER_TRANSITION",
-              message: e.message
-            }
-          ],
-          status: :unprocessable_entity
+          status: :unprocessable_content
         )
       end
 
