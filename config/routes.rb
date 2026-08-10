@@ -10,6 +10,9 @@ Rails.application.routes.draw do
                sessions: "api/v1/auth/sessions"
              }
 
+  post "/api/v1/payments/webhook",
+     to: "api/v1/payments_webhook#create"
+
   namespace :api do
     namespace :v1 do
       resources :products, only: %i[index show create update destroy]
