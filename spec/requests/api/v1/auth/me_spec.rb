@@ -109,6 +109,46 @@ RSpec.describe "Authentication Me", type: :request do
       end
     end
 
+    context "with an expired JWT" do
+      it "rejects the request" do
+        payload = {
+          "sub" => user.id.to_s,
+          "scp" => "user",
+          "jti" => user.jti,
+          "iat" => 1.hour.ago.to_i,
+          "exp" => 1.minute.ago.to_i
+        }
+
+        token = JWT.encode(
+          payload,
+          Rails.application.credentials.secret_key_base,
+          "HS256"
+        )
+
+        get me_path,
+            headers: {
+              "Authorization" => "Bearer #{token}",
+              "Accept" => "application/json"
+            }
+
+        expect(response).to have_http_status(:unauthorized)
+
+        body = JSON.parse(response.body)
+
+        expect(body).to eq(
+          "success" => false,
+          "message" => "Authentication failed.",
+          "data" => {},
+          "errors" => [
+            {
+              "code" => "AUTHENTICATION_FAILED",
+              "message" => "Authentication failed."
+            }
+          ]
+        )
+      end
+    end
+
     context "with a revoked JWT" do
       it "rejects the request after logout" do
         token = login_and_get_token

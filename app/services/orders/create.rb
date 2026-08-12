@@ -23,6 +23,10 @@ module Orders
           product = item.fetch(:product)
           quantity = item.fetch(:quantity)
 
+          unless product.status == "active"
+            raise ArgumentError, "Product is not available for ordering"
+          end
+
           raise ArgumentError, "Quantity must be greater than 0" unless quantity.positive?
 
           unit_price = product.price

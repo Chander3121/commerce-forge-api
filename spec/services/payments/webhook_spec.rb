@@ -86,6 +86,42 @@ RSpec.describe Payments::Webhook do
       expect(order.reload.status).to eq("confirmed")
     end
 
+    it "does not fail when the payment is already succeeded" do
+      payment.update!(
+        status: "succeeded",
+        paid_at: Time.current
+      )
+
+      expect {
+        process_webhook
+      }.not_to raise_error
+
+      expect(payment.reload.status).to eq("succeeded")
+      expect(order.reload.status).to eq("confirmed")
+    end
+
+    it "does not downgrade a succeeded payment when a failed webhook arrives" do
+      payment.update!(
+        status: "succeeded",
+        paid_at: Time.current
+      )
+
+      payload["event"] = "payment.failed"
+      payload["payload"]["payment"]["entity"].merge!(
+        "status" => "failed",
+        "error_code" => "card_declined",
+        "error_description" => "Card was declined"
+      )
+
+      expect {
+        process_webhook
+      }.not_to raise_error
+
+      expect(payment.reload.status).to eq("succeeded")
+      expect(payment.failure_code).to be_nil
+      expect(payment.failure_message).to be_nil
+    end
+
     it "marks the payment as failed when the payment fails" do
       payload["event"] = "payment.failed"
       payload["payload"]["payment"]["entity"]["status"] = "failed"

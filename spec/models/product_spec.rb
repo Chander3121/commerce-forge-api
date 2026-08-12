@@ -20,4 +20,11 @@ RSpec.describe Product, type: :model do
       expect(build(:product)).to be_valid
     end
   end
+
+  it "belongs to a category" do
+    association = described_class.reflect_on_association(:category)
+
+    expect(association).not_to be_nil
+    expect(association.macro).to eq(:belongs_to)
+  end
 end

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_10_061111) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_10_124128) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -76,6 +76,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_10_061111) do
     t.datetime "updated_at", null: false
     t.index ["idempotency_key"], name: "index_payments_on_idempotency_key", unique: true
     t.index ["order_id"], name: "index_payments_on_order_id"
+    t.index ["order_id"], name: "index_payments_on_order_id_succeeded", unique: true, where: "((status)::text = 'succeeded'::text)"
   end
 
   create_table "permissions", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -88,6 +89,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_10_061111) do
   end
 
   create_table "products", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "category_id", null: false
     t.datetime "created_at", null: false
     t.text "description"
     t.string "name", null: false
@@ -95,6 +97,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_10_061111) do
     t.string "slug", null: false
     t.string "status", default: "active", null: false
     t.datetime "updated_at", null: false
+    t.index ["category_id"], name: "index_products_on_category_id"
     t.index ["slug"], name: "index_products_on_slug", unique: true
     t.index ["status"], name: "index_products_on_status"
   end
@@ -157,6 +160,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_10_061111) do
   add_foreign_key "orders", "customers"
   add_foreign_key "orders", "users"
   add_foreign_key "payments", "orders"
+  add_foreign_key "products", "categories"
   add_foreign_key "role_permissions", "permissions"
   add_foreign_key "role_permissions", "roles"
   add_foreign_key "user_roles", "roles"

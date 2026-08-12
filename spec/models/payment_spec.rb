@@ -33,6 +33,26 @@ RSpec.describe Payment, type: :model do
     end
   end
 
+  describe "successful payment uniqueness" do
+    it "does not allow more than one succeeded payment for the same order" do
+      order = create(:order)
+
+      create(
+        :payment,
+        order: order,
+        status: "succeeded"
+      )
+
+      expect {
+        create(
+          :payment,
+          order: order,
+          status: "succeeded"
+        )
+      }.to raise_error(ActiveRecord::RecordNotUnique)
+    end
+  end
+
   describe "factory" do
     it "has a valid factory" do
       expect(build(:payment)).to be_valid

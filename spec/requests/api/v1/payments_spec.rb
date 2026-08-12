@@ -113,6 +113,7 @@ RSpec.describe "Api::V1::Payments", type: :request do
           expect(body["data"]["payment"]["amount"]).to eq(order.total.to_s)
           expect(body["data"]["payment"]["gateway_transaction_id"]).to eq("txn_123")
           expect(body["data"]["payment"]["status"]).to eq("succeeded")
+          expect(order.reload.status).to eq("confirmed")
         end
 
         it "does not create a duplicate payment for the same idempotency key" do
@@ -184,6 +185,37 @@ RSpec.describe "Api::V1::Payments", type: :request do
             "code" => "IDEMPOTENCY_KEY_REQUIRED",
             "message" => "Idempotency-Key header is required."
           )
+        end
+
+        it "does not allow another payment for an already succeeded payment" do
+          gateway = instance_double(Payments::Gateway)
+
+          allow(Payments::RazorpayGateway).to receive(:new).and_return(gateway)
+
+          allow(gateway).to receive(:charge).with(
+            amount: order.total,
+            currency: order.currency
+          ).and_return(
+            success: true,
+            transaction_id: "txn_123"
+          )
+
+          create_payment
+
+          expect(response).to have_http_status(:ok)
+          expect(Payment.where(order: order).count).to eq(1)
+
+          post(
+            "/api/v1/orders/#{order.id}/payments",
+            headers: authenticated_headers(user).merge(
+              "Idempotency-Key" => "payment-456"
+            )
+          )
+
+          expect(response).to have_http_status(:unprocessable_content)
+
+          expect(Payment.where(order: order).count).to eq(1)
+          expect(gateway).to have_received(:charge).once
         end
       end
     end

@@ -98,6 +98,60 @@ RSpec.describe Payments::Process do
       expect(payment.failure_message).to eq("Card was declined")
     end
 
+    it "does not process an already succeeded payment" do
+      payment.update_column(:status, "succeeded")
+
+      expect(gateway).not_to receive(:charge)
+
+      expect {
+        process_payment
+      }.to raise_error(
+        ArgumentError,
+        "Invalid payment status transition"
+      )
+
+      expect(payment.reload.status).to eq("succeeded")
+    end
+
+    it "does not mark the payment as succeeded before the gateway succeeds" do
+      allow(gateway).to receive(:charge).and_return(
+        success: false,
+        transaction_id: "txn_failed",
+        failure_code: "card_declined",
+        failure_message: "Card was declined"
+      )
+
+      process_payment
+
+      expect(payment.reload.status).to eq("failed")
+      expect(payment.paid_at).to be_nil
+    end
+
+    it "does not charge an already processing payment" do
+      payment.update_column(:status, "processing")
+
+      expect(gateway).not_to receive(:charge)
+
+      expect {
+        process_payment
+      }.to raise_error(
+        ArgumentError,
+        "Invalid payment status transition"
+      )
+    end
+
+    it "keeps the payment processing when the gateway raises an exception" do
+      allow(gateway).to receive(:charge)
+        .and_raise(StandardError, "Gateway timeout")
+
+      expect {
+        process_payment
+      }.to raise_error(StandardError, "Gateway timeout")
+
+      expect(payment.reload.status).to eq("processing")
+      expect(payment.reload.paid_at).to be_nil
+    end
+
     context "with RazorpayGateway" do
       it "processes a payment through the Razorpay gateway" do
         razorpay_client = instance_double(Payments::RazorpayClient)

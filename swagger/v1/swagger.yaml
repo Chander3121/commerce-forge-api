@@ -1,0 +1,1759 @@
+---
+openapi: 3.0.1
+info:
+  title: Commerce Forge API
+  version: v1
+  description: Commerce Forge REST API
+paths:
+  "/api/v1/auth/me":
+    get:
+      summary: Get current authenticated user
+      tags:
+      - Authentication
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: authenticated user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      user:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                            format: uuid
+                          email:
+                            type: string
+                            format: email
+                  errors:
+                    type: array
+        '401':
+          description: authentication failed
+  "/api/v1/auth/login":
+    post:
+      summary: Login user
+      tags:
+      - Authentication
+      parameters: []
+      responses:
+        '200':
+          description: login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      user:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                            format: uuid
+                          email:
+                            type: string
+                            format: email
+                  errors:
+                    type: array
+        '401':
+          description: authentication failed
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user:
+                  type: object
+                  properties:
+                    email:
+                      type: string
+                      format: email
+                      example: test@commerceforge.dev
+                    password:
+                      type: string
+                      format: password
+                      example: Password@123
+                  required:
+                  - email
+                  - password
+              required:
+              - user
+        required: true
+  "/api/v1/auth/logout":
+    delete:
+      summary: Logout user
+      tags:
+      - Authentication
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: logout successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    type: object
+                  errors:
+                    type: array
+  "/api/v1/categories":
+    get:
+      summary: List categories
+      tags:
+      - Categories
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: categories fetched successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      categories:
+                        type: array
+                        items:
+                          type: object
+                  errors:
+                    type: array
+        '401':
+          description: authentication failed
+        '403':
+          description: authorization failed
+    post:
+      summary: Create category
+      tags:
+      - Categories
+      security:
+      - bearerAuth: []
+      parameters: []
+      responses:
+        '201':
+          description: category created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      category:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                            format: uuid
+                          name:
+                            type: string
+                          slug:
+                            type: string
+                          description:
+                            type: string
+                            nullable: true
+                          created_at:
+                            type: string
+                            format: date-time
+                          updated_at:
+                            type: string
+                            format: date-time
+                  errors:
+                    type: array
+        '401':
+          description: authentication failed
+        '403':
+          description: authorization failed
+        '422':
+          description: category could not be created
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                category:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                      example: Electronics
+                    slug:
+                      type: string
+                      example: electronics
+                    description:
+                      type: string
+                      nullable: true
+                      example: Electronic products
+                  required:
+                  - name
+                  - slug
+              required:
+              - category
+        required: true
+  "/api/v1/categories/{id}":
+    get:
+      summary: Get category
+      tags:
+      - Categories
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        format: uuid
+        required: true
+        description: Category ID
+        schema:
+          type: string
+      responses:
+        '200':
+          description: category fetched successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      category:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                            format: uuid
+                          name:
+                            type: string
+                          slug:
+                            type: string
+                          description:
+                            type: string
+                            nullable: true
+                          created_at:
+                            type: string
+                            format: date-time
+                          updated_at:
+                            type: string
+                            format: date-time
+                  errors:
+                    type: array
+        '401':
+          description: authentication failed
+        '403':
+          description: authorization failed
+        '404':
+          description: category not found
+    patch:
+      summary: Update category
+      tags:
+      - Categories
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        format: uuid
+        required: true
+        description: Category ID
+        schema:
+          type: string
+      responses:
+        '200':
+          description: category updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      category:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                            format: uuid
+                          name:
+                            type: string
+                          slug:
+                            type: string
+                          description:
+                            type: string
+                            nullable: true
+                          created_at:
+                            type: string
+                            format: date-time
+                          updated_at:
+                            type: string
+                            format: date-time
+                  errors:
+                    type: array
+        '401':
+          description: authentication failed
+        '403':
+          description: authorization failed
+        '422':
+          description: category could not be updated
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                category:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                      example: Updated Electronics
+                    slug:
+                      type: string
+                      example: updated-electronics
+                    description:
+                      type: string
+                      nullable: true
+                      example: Updated category description.
+              required:
+              - category
+        required: true
+    delete:
+      summary: Delete category
+      tags:
+      - Categories
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        format: uuid
+        required: true
+        description: Category ID
+        schema:
+          type: string
+      responses:
+        '200':
+          description: category deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    type: object
+                  errors:
+                    type: array
+        '401':
+          description: authentication failed
+        '403':
+          description: authorization failed
+        '422':
+          description: category could not be deleted
+  "/api/v1/customers":
+    get:
+      summary: List customers
+      tags:
+      - Customers
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: page
+        in: query
+        required: false
+        default: 1
+        description: Page number
+        schema:
+          type: integer
+      - name: per_page
+        in: query
+        required: false
+        default: 20
+        maximum: 100
+        description: Number of customers per page
+        schema:
+          type: integer
+      - name: sort_by
+        in: query
+        required: false
+        default: created_at
+        enum:
+        - name
+        - email
+        - phone
+        - created_at
+        description: "Field used for sorting:\n * `name` \n * `email` \n * `phone`
+          \n * `created_at` \n "
+        schema:
+          type: string
+      - name: sort_order
+        in: query
+        required: false
+        default: desc
+        enum:
+        - asc
+        - desc
+        description: Sort direction
+        schema:
+          type: string
+      - name: search
+        in: query
+        required: false
+        description: Search customers by name, email or phone
+        schema:
+          type: string
+      responses:
+        '200':
+          description: customers fetched successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      customers:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              format: uuid
+                            name:
+                              type: string
+                            email:
+                              type: string
+                              format: email
+                            phone:
+                              type: string
+                              nullable: true
+                            created_at:
+                              type: string
+                              format: date-time
+                      meta:
+                        type: object
+                        properties:
+                          page:
+                            type: integer
+                          per_page:
+                            type: integer
+                          total:
+                            type: integer
+                          total_pages:
+                            type: integer
+                  errors:
+                    type: array
+        '401':
+          description: authentication failed
+        '403':
+          description: authorization failed
+  "/api/v1/customers/{id}":
+    get:
+      summary: Get customer
+      tags:
+      - Customers
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        format: uuid
+        required: true
+        description: Customer ID
+        schema:
+          type: string
+      responses:
+        '200':
+          description: customer fetched successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      customer:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                            format: uuid
+                          name:
+                            type: string
+                          email:
+                            type: string
+                            format: email
+                          phone:
+                            type: string
+                            nullable: true
+                          created_at:
+                            type: string
+                            format: date-time
+                  errors:
+                    type: array
+        '401':
+          description: authentication failed
+        '403':
+          description: authorization failed
+        '404':
+          description: customer not found
+    patch:
+      summary: Update customer
+      tags:
+      - Customers
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        format: uuid
+        required: true
+        description: Customer ID
+        schema:
+          type: string
+      responses:
+        '200':
+          description: customer updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      customer:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                            format: uuid
+                          name:
+                            type: string
+                          email:
+                            type: string
+                            format: email
+                          phone:
+                            type: string
+                            nullable: true
+                          created_at:
+                            type: string
+                            format: date-time
+                  errors:
+                    type: array
+        '401':
+          description: authentication failed
+        '403':
+          description: authorization failed
+        '404':
+          description: customer not found
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                customer:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                      example: Updated Customer
+                    email:
+                      type: string
+                      format: email
+                      example: updated@commerceforge.dev
+                    phone:
+                      type: string
+                      nullable: true
+                      example: '9999999999'
+                  required:
+                  - customer
+        required: true
+  "/api/v1/customers/{id}/orders":
+    get:
+      summary: List customer orders
+      tags:
+      - Customers
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        format: uuid
+        required: true
+        description: Customer ID
+        schema:
+          type: string
+      responses:
+        '200':
+          description: customer orders fetched successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      orders:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              format: uuid
+                            user_id:
+                              type: string
+                              format: uuid
+                            customer_id:
+                              type: string
+                              format: uuid
+                            status:
+                              type: string
+                            subtotal:
+                              type: string
+                            total:
+                              type: string
+                            currency:
+                              type: string
+                            created_at:
+                              type: string
+                              format: date-time
+                            order_items:
+                              type: array
+                              items:
+                                type: object
+                                properties:
+                                  id:
+                                    type: string
+                                    format: uuid
+                                  product_id:
+                                    type: string
+                                    format: uuid
+                                  quantity:
+                                    type: integer
+                                  unit_price:
+                                    type: string
+                                  total_price:
+                                    type: string
+                  errors:
+                    type: array
+        '401':
+          description: authentication failed
+        '403':
+          description: authorization failed
+        '404':
+          description: customer not found
+  "/api/v1/orders":
+    get:
+      summary: List orders
+      tags:
+      - Orders
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: orders fetched successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      orders:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              format: uuid
+                            customer:
+                              type: object
+                              properties:
+                                id:
+                                  type: string
+                                  format: uuid
+                                name:
+                                  type: string
+                                email:
+                                  type: string
+                                  format: email
+                                phone:
+                                  type: string
+                                  nullable: true
+                  errors:
+                    type: array
+        '401':
+          description: authentication failed
+        '403':
+          description: authorization failed
+    post:
+      summary: Create order
+      tags:
+      - Orders
+      security:
+      - bearerAuth: []
+      parameters: []
+      responses:
+        '201':
+          description: order created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      order:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                            format: uuid
+                          user_id:
+                            type: string
+                            format: uuid
+                          customer_id:
+                            type: string
+                            format: uuid
+                          status:
+                            type: string
+                          subtotal:
+                            type: string
+                          total:
+                            type: string
+                          currency:
+                            type: string
+                          created_at:
+                            type: string
+                            format: date-time
+                          updated_at:
+                            type: string
+                            format: date-time
+                  errors:
+                    type: array
+        '401':
+          description: authentication failed
+        '403':
+          description: authorization failed
+        '422':
+          description: invalid order
+        '404':
+          description: product not found
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                order:
+                  type: object
+                  properties:
+                    customer_id:
+                      type: string
+                      format: uuid
+                      example: 0e3edee2-6226-4a68-bb72-b9d4442b681f
+                    items:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          product_id:
+                            type: string
+                            format: uuid
+                            example: 1f4edee2-6226-4a68-bb72-b9d4442b681f
+                          quantity:
+                            type: integer
+                            example: 2
+                        required:
+                        - product_id
+                        - quantity
+                  required:
+                  - customer_id
+                  - items
+              required:
+              - order
+        required: true
+  "/api/v1/orders/{id}":
+    get:
+      summary: Get order
+      tags:
+      - Orders
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: Order ID
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: order fetched successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      order:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                            format: uuid
+                          user_id:
+                            type: string
+                            format: uuid
+                          customer_id:
+                            type: string
+                            format: uuid
+                          status:
+                            type: string
+                          subtotal:
+                            type: string
+                          total:
+                            type: string
+                          currency:
+                            type: string
+                          created_at:
+                            type: string
+                            format: date-time
+                          updated_at:
+                            type: string
+                            format: date-time
+                          customer:
+                            type: object
+                            properties:
+                              id:
+                                type: string
+                                format: uuid
+                              name:
+                                type: string
+                              email:
+                                type: string
+                                format: email
+                              phone:
+                                type: string
+                                nullable: true
+                  errors:
+                    type: array
+        '401':
+          description: authentication failed
+        '403':
+          description: authorization failed
+    patch:
+      summary: Update order
+      tags:
+      - Orders
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        format: uuid
+        required: true
+        description: Order ID
+        schema:
+          type: string
+      responses:
+        '200':
+          description: order updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      order:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                            format: uuid
+                          user_id:
+                            type: string
+                            format: uuid
+                          customer_id:
+                            type: string
+                            format: uuid
+                          status:
+                            type: string
+                          subtotal:
+                            type: string
+                          total:
+                            type: string
+                          currency:
+                            type: string
+                          created_at:
+                            type: string
+                            format: date-time
+                          updated_at:
+                            type: string
+                            format: date-time
+                  errors:
+                    type: array
+        '401':
+          description: authentication failed
+        '403':
+          description: authorization failed
+        '422':
+          description: invalid order update
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                order:
+                  type: object
+                  properties:
+                    customer_id:
+                      type: string
+                      format: uuid
+                  required:
+                  - customer_id
+              required:
+              - order
+        required: true
+  "/api/v1/orders/{id}/confirm":
+    post:
+      summary: Confirm order
+      tags:
+      - Orders
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: Order ID
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: order confirmed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    type: object
+                  errors:
+                    type: array
+        '401':
+          description: authentication failed
+        '403':
+          description: authorization failed
+        '422':
+          description: invalid order status transition
+  "/api/v1/orders/{id}/process":
+    post:
+      summary: Process order
+      tags:
+      - Orders
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: Order ID
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: order moved to processing successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    type: object
+                  errors:
+                    type: array
+        '401':
+          description: authentication failed
+        '403':
+          description: authorization failed
+        '422':
+          description: invalid order status transition
+  "/api/v1/orders/{id}/ship":
+    post:
+      summary: Ship order
+      tags:
+      - Orders
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        format: uuid
+        required: true
+        description: Order ID
+        schema:
+          type: string
+      responses:
+        '200':
+          description: order shipped successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    type: object
+                  errors:
+                    type: array
+        '401':
+          description: authentication failed
+        '403':
+          description: authorization failed
+        '422':
+          description: invalid order status transition
+  "/api/v1/orders/{id}/deliver":
+    post:
+      summary: Deliver order
+      tags:
+      - Orders
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        format: uuid
+        required: true
+        description: Order ID
+        schema:
+          type: string
+      responses:
+        '200':
+          description: order delivered successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    type: object
+                  errors:
+                    type: array
+        '401':
+          description: authentication failed
+        '403':
+          description: authorization failed
+        '422':
+          description: invalid order status transition
+  "/api/v1/orders/{id}/cancel":
+    post:
+      summary: Cancel order
+      tags:
+      - Orders
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        format: uuid
+        required: true
+        description: Order ID
+        schema:
+          type: string
+      responses:
+        '200':
+          description: order cancelled successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    type: object
+                  errors:
+                    type: array
+        '401':
+          description: authentication failed
+        '403':
+          description: authorization failed
+        '422':
+          description: invalid order status transition
+  "/api/v1/orders/{order_id}/payments":
+    post:
+      summary: Process payment
+      tags:
+      - Payments
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: order_id
+        in: path
+        format: uuid
+        required: true
+        description: Order ID
+        schema:
+          type: string
+      - name: Idempotency-Key
+        in: header
+        required: false
+        description: Unique key used to safely retry payment requests
+        schema:
+          type: string
+      responses:
+        '200':
+          description: payment processed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      payment:
+                        type: object
+                        properties:
+                          id:
+                            type: integer
+                          order_id:
+                            type: string
+                            format: uuid
+                          amount:
+                            type: string
+                          currency:
+                            type: string
+                          status:
+                            type: string
+                          gateway:
+                            type: string
+                          gateway_transaction_id:
+                            type: string
+                          paid_at:
+                            type: string
+                            format: date-time
+                            nullable: true
+                  errors:
+                    type: array
+        '401':
+          description: authentication failed
+        '403':
+          description: authorization failed
+        '422':
+          description: payment gateway rejected the payment
+  "/api/v1/payments/webhook":
+    post:
+      summary: Process Razorpay webhook
+      tags:
+      - Payments Webhook
+      parameters:
+      - name: X-Razorpay-Signature
+        in: header
+        required: true
+        description: Razorpay webhook signature
+        schema:
+          type: string
+      - name: X-Razorpay-Event-Id
+        in: header
+        required: false
+        description: Unique Razorpay webhook event ID
+        schema:
+          type: string
+      responses:
+        '200':
+          description: webhook processed successfully
+        '401':
+          description: invalid webhook signature
+        '422':
+          description: webhook event ID is required
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                event:
+                  type: string
+                  example: payment.captured
+                payload:
+                  type: object
+                  properties:
+                    payment:
+                      type: object
+                      properties:
+                        entity:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              example: pay_123
+                            status:
+                              type: string
+                              example: captured
+                            error_code:
+                              type: string
+                              nullable: true
+                              example: card_declined
+                            error_description:
+                              type: string
+                              nullable: true
+                              example: Card was declined
+              required:
+              - event
+              - payload
+        required: true
+  "/api/v1/products":
+    get:
+      summary: List products
+      tags:
+      - Products
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: category_id
+        in: query
+        format: uuid
+        required: false
+        description: Filter products by category
+        schema:
+          type: string
+      - name: search
+        in: query
+        required: false
+        description: Search products by name or description
+        schema:
+          type: string
+      - name: min_price
+        in: query
+        format: float
+        required: false
+        description: Minimum product price
+        schema:
+          type: number
+      - name: max_price
+        in: query
+        format: float
+        required: false
+        description: Maximum product price
+        schema:
+          type: number
+      - name: status
+        in: query
+        required: false
+        enum:
+        - active
+        - inactive
+        description: "Filter products by status:\n * `active` \n * `inactive` \n "
+        schema:
+          type: string
+      - name: sort_by
+        in: query
+        required: false
+        enum:
+        - name
+        - price
+        - created_at
+        description: Field used for sorting
+        schema:
+          type: string
+      - name: sort_order
+        in: query
+        required: false
+        enum:
+        - asc
+        - desc
+        description: Sort direction
+        schema:
+          type: string
+      - name: page
+        in: query
+        required: false
+        default: 1
+        description: Page number
+        schema:
+          type: integer
+      - name: per_page
+        in: query
+        required: false
+        default: 20
+        maximum: 100
+        description: Number of products per page
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: products fetched successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      products:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              format: uuid
+                            name:
+                              type: string
+                            slug:
+                              type: string
+                            description:
+                              type: string
+                              nullable: true
+                            price:
+                              type: string
+                            status:
+                              type: string
+                              enum:
+                              - active
+                              - inactive
+                            category_id:
+                              type: string
+                              format: uuid
+                            created_at:
+                              type: string
+                              format: date-time
+                            updated_at:
+                              type: string
+                              format: date-time
+                            category:
+                              type: object
+                              properties:
+                                id:
+                                  type: string
+                                  format: uuid
+                                name:
+                                  type: string
+                                slug:
+                                  type: string
+                      meta:
+                        type: object
+                        properties:
+                          page:
+                            type: integer
+                          per_page:
+                            type: integer
+                          total:
+                            type: integer
+                          total_pages:
+                            type: integer
+                  errors:
+                    type: array
+        '401':
+          description: authentication failed
+        '403':
+          description: authorization failed
+        '422':
+          description: invalid product status
+    post:
+      summary: Create product
+      tags:
+      - Products
+      security:
+      - bearerAuth: []
+      parameters: []
+      responses:
+        '201':
+          description: product created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      product:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                            format: uuid
+                          name:
+                            type: string
+                          slug:
+                            type: string
+                          description:
+                            type: string
+                            nullable: true
+                          price:
+                            type: string
+                          status:
+                            type: string
+                          category_id:
+                            type: string
+                            format: uuid
+                          created_at:
+                            type: string
+                            format: date-time
+                          updated_at:
+                            type: string
+                            format: date-time
+                  errors:
+                    type: array
+        '401':
+          description: authentication failed
+        '403':
+          description: authorization failed
+        '422':
+          description: invalid product
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                product:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                      example: MacBook Pro
+                    slug:
+                      type: string
+                      example: macbook-pro
+                    description:
+                      type: string
+                      nullable: true
+                      example: Professional laptop.
+                    price:
+                      type: string
+                      example: '1999.99'
+                    status:
+                      type: string
+                      enum:
+                      - active
+                      - inactive
+                      example: active
+                    category_id:
+                      type: string
+                      format: uuid
+                      example: 0e3edee2-6226-4a68-bb72-b9d4442b681f
+                  required:
+                  - name
+                  - slug
+                  - price
+                  - status
+                  - category_id
+              required:
+              - product
+        required: true
+  "/api/v1/products/{id}":
+    get:
+      summary: Get product
+      tags:
+      - Products
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        format: uuid
+        required: true
+        description: Product ID
+        schema:
+          type: string
+      responses:
+        '200':
+          description: product fetched successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      product:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                            format: uuid
+                          category_id:
+                            type: string
+                            format: uuid
+                          created_at:
+                            type: string
+                            format: date-time
+                          description:
+                            type: string
+                            nullable: true
+                          name:
+                            type: string
+                          price:
+                            type: string
+                            example: '999.99'
+                          slug:
+                            type: string
+                          status:
+                            type: string
+                            enum:
+                            - active
+                            - inactive
+                          updated_at:
+                            type: string
+                            format: date-time
+                          category:
+                            type: object
+                            properties:
+                              id:
+                                type: string
+                                format: uuid
+                              name:
+                                type: string
+                              slug:
+                                type: string
+                  errors:
+                    type: array
+        '401':
+          description: authentication failed
+        '403':
+          description: authorization failed
+        '404':
+          description: product not found
+    patch:
+      summary: Update product
+      tags:
+      - Products
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        format: uuid
+        required: true
+        description: Product ID
+        schema:
+          type: string
+      responses:
+        '200':
+          description: product updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      product:
+                        type: object
+                  errors:
+                    type: array
+        '401':
+          description: authentication failed
+        '403':
+          description: authorization failed
+        '404':
+          description: product not found
+        '422':
+          description: invalid product
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                product:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                      example: MacBook Pro M4
+                    slug:
+                      type: string
+                      example: macbook-pro-m4
+                    description:
+                      type: string
+                      nullable: true
+                      example: Updated professional laptop.
+                    price:
+                      type: string
+                      example: '2199.99'
+                    status:
+                      type: string
+                      enum:
+                      - active
+                      - inactive
+                      example: active
+                    category_id:
+                      type: string
+                      format: uuid
+                      example: 0e3edee2-6226-4a68-bb72-b9d4442b681f
+              required:
+              - product
+        required: true
+    delete:
+      summary: Delete product
+      tags:
+      - Products
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        format: uuid
+        required: true
+        description: Product ID
+        schema:
+          type: string
+      responses:
+        '200':
+          description: product deleted successfully
+        '401':
+          description: authentication failed
+        '403':
+          description: authorization failed
+        '404':
+          description: product not found
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+servers:
+- url: http://localhost:3000

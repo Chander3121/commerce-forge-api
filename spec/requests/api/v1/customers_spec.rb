@@ -100,6 +100,20 @@ RSpec.describe "Api::V1::Customers", type: :request do
           expect(body["data"]["meta"]["total_pages"]).to eq(3)
         end
 
+        it "limits per_page to 100" do
+          get "/api/v1/customers",
+              params: {
+                per_page: 1000
+              },
+              headers: authenticated_headers(user)
+
+          expect(response).to have_http_status(:ok)
+
+          body = JSON.parse(response.body)
+
+          expect(body["data"]["meta"]["per_page"]).to eq(100)
+        end
+
         it "returns the second page of customers" do
           create_list(:customer, 25)
 
@@ -546,6 +560,22 @@ RSpec.describe "Api::V1::Customers", type: :request do
           expect(item["unit_price"].to_f).to eq(500.0)
           expect(item["total_price"].to_f).to eq(1000.0)
         end
+
+        it "returns not found when the customer does not exist" do
+          get "/api/v1/customers/#{SecureRandom.uuid}/orders",
+              headers: authenticated_headers(user)
+
+          expect(response).to have_http_status(:not_found)
+
+          body = JSON.parse(response.body)
+
+          expect(body["success"]).to be(false)
+          expect(body["message"]).to eq("Customer not found.")
+          expect(body["errors"]).to include(
+            "code" => "RESOURCE_NOT_FOUND",
+            "message" => "Customer not found."
+          )
+        end
       end
     end
   end
@@ -639,6 +669,24 @@ RSpec.describe "Api::V1::Customers", type: :request do
           expect(body["success"]).to be(true)
           expect(body["message"]).to eq("Customer updated successfully.")
           expect(body["data"]["customer"]["id"]).to eq(customer.id)
+        end
+
+        it "returns not found when the customer does not exist" do
+          patch "/api/v1/customers/#{SecureRandom.uuid}",
+                params: customer_params,
+                headers: authenticated_headers(user),
+                as: :json
+
+          expect(response).to have_http_status(:not_found)
+
+          body = JSON.parse(response.body)
+
+          expect(body["success"]).to be(false)
+          expect(body["message"]).to eq("Customer not found.")
+          expect(body["errors"]).to include(
+            "code" => "RESOURCE_NOT_FOUND",
+            "message" => "Customer not found."
+          )
         end
       end
     end

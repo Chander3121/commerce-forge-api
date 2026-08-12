@@ -114,5 +114,32 @@ RSpec.describe Payments::Create do
         "Idempotency key has already been used for another order"
       )
     end
+
+    it "recovers when another request creates the same idempotency key first" do
+      existing_payment = create(
+        :payment,
+        order: order,
+        idempotency_key: "payment-race",
+        status: "pending"
+      )
+
+      allow(Payment).to receive(:find_by).and_call_original
+
+      allow(Payment).to receive(:find_by)
+        .with(idempotency_key: "payment-race")
+        .and_return(nil, existing_payment)
+
+      expect(Payment).to receive(:create!).and_raise(
+        ActiveRecord::RecordNotUnique
+      )
+
+      result = described_class.new(
+        order: order,
+        gateway: gateway,
+        idempotency_key: "payment-race"
+      ).call
+
+      expect(result).to eq(existing_payment)
+    end
   end
 end

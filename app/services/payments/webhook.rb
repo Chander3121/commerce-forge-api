@@ -19,22 +19,22 @@ module Payments
           gateway_transaction_id: payment_transaction_id
         )
 
-        case @payload["event"]
-        when "payment.captured"
-          payment.update!(
-            status: "succeeded"
-          )
+        payment.with_lock do
+          case @payload["event"]
+          when "payment.captured"
+            payment.succeed! if payment.status == "processing"
 
-          payment.order.update!(
-            status: "confirmed"
-          )
+            payment.order.confirm! if payment.order.status == "pending"
 
-        when "payment.failed"
-          payment.update!(
-            status: "failed",
-            failure_code: failure_code,
-            failure_message: failure_message
-          )
+          when "payment.failed"
+            if payment.status == "processing"
+              payment.update!(
+                status: "failed",
+                failure_code: failure_code,
+                failure_message: failure_message
+              )
+            end
+          end
         end
 
         payment

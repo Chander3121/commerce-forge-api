@@ -2,6 +2,7 @@
 
 FactoryBot.define do
   factory :product do
+    category
     sequence(:name) { |n| "Product #{n}" }
     sequence(:slug) { |n| "product-#{n}" }
     description { "A CommerceForge product." }

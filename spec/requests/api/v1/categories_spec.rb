@@ -301,6 +301,31 @@ RSpec.describe "Api::V1::Categories", type: :request do
           expect(body["data"]["category"]["name"]).to eq("Electronics")
           expect(body["data"]["category"]["slug"]).to eq("electronics")
         end
+
+        it "returns an error when the slug already exists" do
+          create(
+            :category,
+            name: "Existing Electronics",
+            slug: "electronics"
+          )
+
+          expect {
+            post "/api/v1/categories",
+                 params: category_params,
+                 headers: authenticated_headers(user),
+                 as: :json
+          }.not_to change(Category, :count)
+
+          expect(response).to have_http_status(:unprocessable_content)
+
+          body = JSON.parse(response.body)
+
+          expect(body["success"]).to be(false)
+          expect(body["message"]).to eq("Category could not be created.")
+          expect(body["errors"]).to include(
+            "Slug has already been taken"
+          )
+        end
       end
     end
   end
@@ -393,6 +418,39 @@ RSpec.describe "Api::V1::Categories", type: :request do
           expect(body["message"]).to eq("Category updated successfully.")
           expect(body["data"]["category"]["id"]).to eq(category.id)
         end
+
+        it "returns an error when the updated slug already exists" do
+          create(
+            :category,
+            name: "Existing Electronics",
+            slug: "electronics"
+          )
+
+          category.update!(slug: "books")
+
+          params = {
+            category: {
+              slug: "electronics"
+            }
+          }
+
+          patch "/api/v1/categories/#{category.id}",
+                params: params,
+                headers: authenticated_headers(user),
+                as: :json
+
+          expect(response).to have_http_status(:unprocessable_content)
+
+          body = JSON.parse(response.body)
+
+          expect(body["success"]).to be(false)
+          expect(body["message"]).to eq("Category could not be updated.")
+          expect(body["errors"]).to include(
+            "Slug has already been taken"
+          )
+
+          expect(category.reload.slug).to eq("books")
+        end
       end
     end
   end
@@ -466,6 +524,22 @@ RSpec.describe "Api::V1::Categories", type: :request do
           expect(body["success"]).to be(true)
           expect(body["message"]).to eq("Category deleted successfully.")
           expect(body["data"]).to eq({})
+        end
+
+        it "does not delete a category that has products" do
+          create(:product, category: category)
+
+          expect {
+            delete "/api/v1/categories/#{category.id}",
+                   headers: authenticated_headers(user)
+          }.not_to change(Category, :count)
+
+          expect(response).to have_http_status(:unprocessable_content)
+
+          body = JSON.parse(response.body)
+
+          expect(body["success"]).to be(false)
+          expect(body["message"]).to eq("Category could not be deleted.")
         end
       end
     end

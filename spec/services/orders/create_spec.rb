@@ -132,5 +132,27 @@ RSpec.describe Orders::Create do
       expect(Order.count).to eq(0)
       expect(OrderItem.count).to eq(0)
     end
+
+    it "rejects an inactive product" do
+      product.update!(status: "inactive")
+
+      expect do
+        described_class.new(
+          customer: customer,
+          user: user,
+          items: [
+            {
+              product: product,
+              quantity: 1
+            }
+          ]
+        ).call
+      end.to raise_error(
+        ArgumentError,
+        "Product is not available for ordering"
+      )
+
+      expect(Order.count).to eq(0)
+    end
   end
 end

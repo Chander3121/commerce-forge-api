@@ -36,6 +36,7 @@ module Api
 
         page = 1 if page < 1
         per_page = 20 if per_page < 1
+        per_page = 100 if per_page > 100
 
         total = customers.count
 

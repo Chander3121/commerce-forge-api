@@ -2,11 +2,13 @@
 
 class ApplicationController < ActionController::API
   include Pundit::Authorization
+  include Pagy::Method
 
   respond_to :json
 
   rescue_from Pundit::NotAuthorizedError, with: :render_authorization_error
   rescue_from ActiveRecord::RecordNotFound, with: :render_not_found
+  rescue_from ActionController::ParameterMissing, with: :render_parameter_missing
 
   private
 
@@ -57,6 +59,21 @@ class ApplicationController < ActionController::API
         }
       ],
       status: :not_found
+    )
+  end
+
+  def render_parameter_missing(exception)
+    message = "Required parameter missing: #{exception.param}"
+
+    render_error(
+      message: "Required parameter missing.",
+      errors: [
+        {
+          code: "PARAMETER_MISSING",
+          message: message
+        }
+      ],
+      status: :unprocessable_content
     )
   end
 end

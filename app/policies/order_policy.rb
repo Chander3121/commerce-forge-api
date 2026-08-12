@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 class OrderPolicy < ApplicationPolicy
   def index?
     user.has_permission?("orders.read")
@@ -16,32 +14,52 @@ class OrderPolicy < ApplicationPolicy
   end
 
   def update?
-    user.has_permission?("orders.update")
+    manageable?("orders.update")
   end
 
   def confirm?
-    user.has_permission?("orders.update")
+    manageable?("orders.update")
   end
 
   def process_order?
-    user.has_permission?("orders.update")
+    manageable?("orders.update")
   end
 
   def ship?
-    user.has_permission?("orders.update")
+    manageable?("orders.update")
   end
 
   def deliver?
-    user.has_permission?("orders.update")
+    manageable?("orders.update")
   end
 
   def cancel?
-    user.has_permission?("orders.update")
+    manageable?("orders.update")
+  end
+
+  class Scope < ApplicationPolicy::Scope
+    def resolve
+      if user.admin? || user.super_admin?
+        scope.all
+      else
+        scope.where(user_id: user.id)
+      end
+    end
   end
 
   private
 
+  def manageable?(permission)
+    return false unless user.has_permission?(permission)
+
+    record.user_id == user.id || privileged_order_manager?
+  end
+
   def privileged_order_reader?
+    user.admin? || user.super_admin?
+  end
+
+  def privileged_order_manager?
     user.admin? || user.super_admin?
   end
 end

@@ -245,5 +245,79 @@ RSpec.describe "Api::V1::Payments Webhook", type: :request do
       expect(payment.failure_message).to eq("Card was declined")
       expect(order.status).to eq("pending")
     end
+
+    it "does not downgrade an already succeeded payment" do
+      payment.update!(
+        status: "succeeded",
+        paid_at: Time.current
+      )
+
+      order.update!(status: "confirmed")
+
+      failed_payload = {
+        "event" => "payment.failed",
+        "payload" => {
+          "payment" => {
+            "entity" => {
+              "id" => "pay_123",
+              "status" => "failed",
+              "error_code" => "card_declined",
+              "error_description" => "Card was declined"
+            }
+          }
+        }
+      }.to_json
+
+      signature = OpenSSL::HMAC.hexdigest(
+        "SHA256",
+        webhook_secret,
+        failed_payload
+      )
+
+      post(
+        "/api/v1/payments/webhook",
+        params: failed_payload,
+        headers: {
+          "CONTENT_TYPE" => "application/json",
+          "X-Razorpay-Signature" => signature,
+          "X-Razorpay-Event-Id" => "evt_failed_after_success"
+        }
+      )
+
+      expect(response).to have_http_status(:ok)
+
+      expect(payment.reload.status).to eq("succeeded")
+      expect(order.reload.status).to eq("confirmed")
+    end
+
+    it "does not reprocess an already succeeded payment" do
+      payment.update!(
+        status: "succeeded",
+        paid_at: Time.current
+      )
+
+      order.update!(status: "confirmed")
+
+      signature = OpenSSL::HMAC.hexdigest(
+        "SHA256",
+        webhook_secret,
+        payload
+      )
+
+      post(
+        "/api/v1/payments/webhook",
+        params: payload,
+        headers: {
+          "CONTENT_TYPE" => "application/json",
+          "X-Razorpay-Signature" => signature,
+          "X-Razorpay-Event-Id" => "evt_captured_after_success"
+        }
+      )
+
+      expect(response).to have_http_status(:ok)
+
+      expect(payment.reload.status).to eq("succeeded")
+      expect(order.reload.status).to eq("confirmed")
+    end
   end
 end

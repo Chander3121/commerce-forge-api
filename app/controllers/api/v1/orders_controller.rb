@@ -9,7 +9,9 @@ module Api
       def index
         authorize Order
 
-        orders = Order.includes(:order_items, :customer).order(created_at: :desc)
+        orders = policy_scope(Order)
+          .includes(:order_items, :customer)
+          .order(created_at: :desc)
 
         render_success(
           message: "Orders fetched successfully.",
@@ -91,6 +93,19 @@ module Api
       def update
         authorize @order
 
+        if params.dig(:order, :status).present?
+          return render_error(
+            message: "Order status must be changed through a lifecycle action.",
+            errors: [
+              {
+                code: "ORDER_STATUS_UPDATE_NOT_ALLOWED",
+                message: "Order status must be changed through a lifecycle action."
+              }
+            ],
+            status: :unprocessable_content
+          )
+        end
+
         @order.update!(order_update_params)
 
         render_success(
@@ -125,6 +140,17 @@ module Api
             )
           }
         )
+      rescue ArgumentError => e
+        render_error(
+          message: e.message,
+          errors: [
+            {
+              code: "INVALID_ORDER",
+              message: e.message
+            }
+          ],
+          status: :unprocessable_content
+        )
       end
 
       def process_order
@@ -139,6 +165,17 @@ module Api
               only: %i[id user_id customer_id status subtotal total currency created_at]
             )
           }
+        )
+      rescue ArgumentError => e
+        render_error(
+          message: e.message,
+          errors: [
+            {
+              code: "INVALID_ORDER",
+              message: e.message
+            }
+          ],
+          status: :unprocessable_content
         )
       end
 
@@ -155,6 +192,17 @@ module Api
             )
           }
         )
+      rescue ArgumentError => e
+        render_error(
+          message: e.message,
+          errors: [
+            {
+              code: "INVALID_ORDER",
+              message: e.message
+            }
+          ],
+          status: :unprocessable_content
+        )
       end
 
       def deliver
@@ -169,6 +217,17 @@ module Api
               only: %i[id user_id customer_id status subtotal total currency created_at]
             )
           }
+        )
+      rescue ArgumentError => e
+        render_error(
+          message: e.message,
+          errors: [
+            {
+              code: "INVALID_ORDER",
+              message: e.message
+            }
+          ],
+          status: :unprocessable_content
         )
       end
 
@@ -207,12 +266,8 @@ module Api
         end
       end
 
-      def order_customer_id
-        params.require(:order).fetch(:customer_id)
-      end
-
       def order_update_params
-        params.require(:order).permit(:status)
+        params.require(:order).permit(:customer_id)
       end
     end
   end

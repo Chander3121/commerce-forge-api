@@ -16,4 +16,11 @@ RSpec.describe Category, type: :model do
       expect(build(:category)).to be_valid
     end
   end
+
+  it "has many products" do
+    association = described_class.reflect_on_association(:products)
+
+    expect(association).not_to be_nil
+    expect(association.macro).to eq(:has_many)
+  end
 end

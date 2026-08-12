@@ -72,11 +72,17 @@ module Api
       def destroy
         authorize @category
 
-        @category.destroy!
-
-        render_success(
-          message: "Category deleted successfully."
-        )
+        if @category.destroy
+          render_success(
+            message: "Category deleted successfully."
+          )
+        else
+          render_error(
+            message: "Category could not be deleted.",
+            errors: @category.errors.full_messages,
+            status: :unprocessable_content
+          )
+        end
       end
 
       private

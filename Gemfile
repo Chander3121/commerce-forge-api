@@ -62,3 +62,7 @@ group :development, :test do
   gem "annotate"
   gem "bullet"
 end
+
+gem "rswag-api", "~> 2.17"
+gem "rswag-ui", "~> 2.17"
+gem "rswag-specs", "~> 2.17"

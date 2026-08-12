@@ -7,9 +7,7 @@ module Api
       before_action :set_order
 
       def create
-        order = Order.find(params[:order_id])
-
-        authorize order, :update?
+        authorize @order, :update?
 
         idempotency_key = request.headers["Idempotency-Key"]
 
@@ -27,7 +25,7 @@ module Api
         end
 
         payment = Payments::Create.new(
-          order: order,
+          order: @order,
           gateway: params[:gateway] || "razorpay",
           idempotency_key: idempotency_key
         ).call
@@ -49,6 +47,10 @@ module Api
             status: :unprocessable_content
           )
         end
+
+        Payments::Complete.new(
+          payment: payment
+        ).call
 
         render_success(
           message: "Payment processed successfully.",
