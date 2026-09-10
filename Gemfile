@@ -16,7 +16,7 @@ gem "bootsnap", require: false
 gem "oj"
 
 # File Processing (Active Storage)
-gem "image_processing", "~> 1.2"
+gem "image_processing", "~> 2.1"
 
 # Authentication
 gem "devise"
